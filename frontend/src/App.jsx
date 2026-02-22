@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 // import logo from './assets/itipro-logo.svg';
 import logo from './assets/logo.jpeg';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://itipro1-1.onrender.com/api';
 
 const successSteps = [
   'Learn technology and build your profile.',
