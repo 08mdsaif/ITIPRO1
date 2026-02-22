@@ -1,8 +1,8 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 // import logo from './assets/itipro-logo.svg';
 import logo from './assets/logo.jpeg';
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = 'https://itipro1-1.onrender.com/api';
 
 const successSteps = [
   'Learn technology and build your profile.',
@@ -24,11 +24,34 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
   const [messageType, setMessageType] = useState('');
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [student, setStudent] = useState(null);
   const formRef = useRef(null);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const token = localStorage.getItem('token');
+    const studentData = localStorage.getItem('student');
+    
+    if (token && studentData) {
+      setIsLoggedIn(true);
+      setStudent(JSON.parse(studentData));
+    }
+  }, []);
 
   const jumpToRegistration = () => {
     setIsLoginView(false);
     formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('student');
+    setIsLoggedIn(false);
+    setStudent(null);
+    setMessage('Logged out successfully');
+    setMessageType('success');
+    setTimeout(() => setMessage(''), 3000);
   };
 
   const handleRegistration = async (e) => {
@@ -103,6 +126,8 @@ function App() {
         setMessage('Login successful! Welcome ' + result.student.fullName);
         localStorage.setItem('token', result.token);
         localStorage.setItem('student', JSON.stringify(result.student));
+        setIsLoggedIn(true);
+        setStudent(result.student);
         e.target.reset();
       } else {
         setMessageType('error');
@@ -118,92 +143,18 @@ function App() {
 
   return (
     <div className="page">
-      <main className="container">
-        <header className="hero">
-          <p className="hero-brand">Institute of Technology Innovation (ITIPRO)</p>
-          <h1>Internship - We are Hiring for EV</h1>
-          <div className="hero-strip">
-            <img src={logo} alt="ITIPRO logo" className="logo" />
-            <div className="hero-note">
-              <h3>We are hiring for EV</h3>
-              <p><strong>Mode:</strong> Hybrid</p>
-              <p>Online + Offline</p>
-              <p>Emerging Niche: EV & Charging</p>
-            </div>
-            <div className="battery">⚡ EV</div>
-          </div>
-        </header>
-
-        <section className="card">
-          <h2>Registration Fees</h2>
-          <p><strong>INR:</strong> ₹7,999 per person (India, including GST)</p>
-          <p><strong>USD:</strong> $100 (for other countries)</p>
-          <p><strong>Group Discount Offer</strong></p>
-          <ul>
-            <li>Group of 5+ will get 5% discount.</li>
-            <li>Group of 10+ will get 10% discount.</li>
-          </ul>
-          <div className="register-line">
-            <p><strong>Duration:</strong> 1-6 months</p>
-            <button type="button" className="register-btn" onClick={jumpToRegistration}>Register Here</button>
-          </div>
-          <p><strong>YouTube:</strong> Link</p>
-          <p><strong>WhatsApp:</strong> Link</p>
-        </section>
-
-        <section className="card">
-          <h2>Program Details (Online / Offline)</h2>
-          <div className="mode-grid">
-            <div>
-              <h3>Online</h3>
-              <p>Date: To be announced</p>
-              <p>Time: Shared after registration</p>
-              <p>Platform: Google Meet</p>
-            </div>
-            <div>
-              <h3>Offline</h3>
-              <p>Date: To be announced</p>
-              <p>Time: Shared after registration</p>
-              <p>Venue: ITIPRO center</p>
-            </div>
-          </div>
-          <h3>Perks</h3>
-          <ul>
-            <li>QR verified offer letter and internship certificate.</li>
-            <li>Pre-placement support (4.5-6.5 LPA guidance).</li>
-          </ul>
-          <h3>Eligibility</h3>
-          <p>College students, freshers, and any graduates are welcome.</p>
-        </section>
-
-        <section className="flow-sheet">
-          <h2>How to succeed in Internship / Courses / Inplant Training?</h2>
-          <div className="success-steps">
-            {successSteps.map((text, i) => (
-              <article className="step-bubble" key={text}>
-                <span className="step-number">{i + 1}</span>
-                <p>{text}</p>
-              </article>
-            ))}
-          </div>
-
-          <h2 className="boxed-title">How to Contact ITIPRO for Attending Internship?</h2>
-          <div className="contact-map">
-            {contactFlow.map((item) => (
-              <div className="contact-row" key={item.option}>
-                <div className={`speech-card ${!item.left ? 'ghost' : ''}`}>{item.left || ' '}</div>
-                <div className="option-node">{item.option}</div>
-                <div className={`speech-card ${!item.right ? 'ghost' : ''}`}>{item.right || ' '}</div>
+      {isLoggedIn && student ? (
+        // Dashboard View - After Login
+        <main className="container">
+          <header className="dashboard-header">
+            <div className="header-top">
+              <div className="header-left">
+                <img src={logo} alt="ITIPRO logo" className="logo-small" />
+                <h1 className="dashboard-title">Welcome, {student.fullName}! 👋</h1>
               </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="auth-section" ref={formRef}>
-          <div className="auth-tabs">
-            <button className={!isLoginView ? 'active' : ''} onClick={() => setIsLoginView(false)} type="button">Registration</button>
-            <button className={isLoginView ? 'active' : ''} onClick={() => setIsLoginView(true)} type="button">Login</button>
-          </div>
+              <button className="logout-btn" onClick={handleLogout}>Logout</button>
+            </div>
+          </header>
 
           {message && (
             <div className={`message ${messageType}`}>
@@ -211,41 +162,204 @@ function App() {
             </div>
           )}
 
-          {!isLoginView ? (
-            <form className="form" onSubmit={handleRegistration}>
-              <h3>Student Registration</h3>
-              <div className="field-row">
-                <label>Full Name<input type="text" name="fullName" placeholder="Enter full name" required /></label>
-                <label>Email<input type="email" name="email" placeholder="Enter email" required /></label>
+          <section className="dashboard-section">
+            <h2>Your Profile Information</h2>
+            <div className="profile-card">
+              <div className="profile-info-grid">
+                <div className="profile-item">
+                  <label>Full Name</label>
+                  <p className="info-value">{student.fullName}</p>
+                </div>
+                <div className="profile-item">
+                  <label>Email</label>
+                  <p className="info-value">{student.email}</p>
+                </div>
+                <div className="profile-item">
+                  <label>Phone</label>
+                  <p className="info-value">{student.phone}</p>
+                </div>
+                <div className="profile-item">
+                  <label>College / University</label>
+                  <p className="info-value">{student.college}</p>
+                </div>
+                <div className="profile-item">
+                  <label>Qualification</label>
+                  <p className="info-value">{student.qualification}</p>
+                </div>
+                <div className="profile-item">
+                  <label>Interested Domain</label>
+                  <p className="info-value">{student.interestedDomain}</p>
+                </div>
               </div>
-              <div className="field-row">
-                <label>Phone<input type="tel" name="phone" placeholder="Enter mobile number" required /></label>
-                <label>College / University<input type="text" name="college" placeholder="Enter college name" required /></label>
+            </div>
+          </section>
+
+          <section className="dashboard-section">
+            <h2>Next Steps</h2>
+            <div className="next-steps">
+              <div className="step-card">
+                <div className="step-icon">📚</div>
+                <h3>Start Learning</h3>
+                <p>Begin with the course materials and practical assignments.</p>
               </div>
-              <div className="field-row">
-                <label>Qualification<select name="qualification" required><option value="">Select</option><option>B.Tech</option><option>BCA</option><option>MCA</option><option>Other Graduate</option></select></label>
-                <label>Interested Domain<select name="interestedDomain" required><option value="">Select</option><option>EV Technology</option><option>Web Development</option><option>Data Science</option><option>Digital Marketing</option></select></label>
+              <div className="step-card">
+                <div className="step-icon">🚀</div>
+                <h3>Build Projects</h3>
+                <p>Work on live practical projects related to {student.interestedDomain}.</p>
               </div>
-              <div className="field-row">
-                <label>Password<input type="password" name="password" placeholder="Create password" required /></label>
-                <label>Confirm Password<input type="password" name="confirmPassword" placeholder="Confirm password" required /></label>
+              <div className="step-card">
+                <div className="step-icon">🎓</div>
+                <h3>Get Certified</h3>
+                <p>Complete the internship and earn your certificate.</p>
               </div>
-              <button className="submit" type="submit" disabled={loading}>{loading ? 'Registering...' : 'Register Now'}</button>
-            </form>
-          ) : (
-            <form className="form" onSubmit={handleLogin}>
-              <h3>Student Login</h3>
-              <div className="field-row single">
-                <label>Email or Phone<input type="text" name="emailOrPhone" placeholder="Enter email or mobile" required /></label>
+              <div className="step-card">
+                <div className="step-icon">💼</div>
+                <h3>Career Support</h3>
+                <p>Get placement and job support from ITIPRO.</p>
               </div>
-              <div className="field-row single">
-                <label>Password<input type="password" name="password" placeholder="Enter password" required /></label>
+            </div>
+          </section>
+
+          <section className="dashboard-section">
+            <h2>Contact Support</h2>
+            <div className="support-info">
+              <p>📞 <strong>Call:</strong> +91 9191 000 000</p>
+              <p>💬 <strong>WhatsApp:</strong> +91 9190 000 000</p>
+              <p>📧 <strong>Email:</strong> care@itipro.in</p>
+            </div>
+          </section>
+        </main>
+      ) : (
+        // Homepage View - Before Login
+        <main className="container">
+          <header className="hero">
+            <p className="hero-brand">Institute of Technology Innovation (ITIPRO)</p>
+            <h1>Internship - We are Hiring for EV</h1>
+            <div className="hero-strip">
+              <img src={logo} alt="ITIPRO logo" className="logo" />
+              <div className="hero-note">
+                <h3>We are hiring for EV</h3>
+                <p><strong>Mode:</strong> Hybrid</p>
+                <p>Online + Offline</p>
+                <p>Emerging Niche: EV & Charging</p>
               </div>
-              <button className="submit" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
-            </form>
-          )}
-        </section>
-      </main>
+              <div className="battery">⚡ EV</div>
+            </div>
+          </header>
+
+          <section className="card">
+            <h2>Registration Fees</h2>
+            <p><strong>INR:</strong> ₹7,999 per person (India, including GST)</p>
+            <p><strong>USD:</strong> $100 (for other countries)</p>
+            <p><strong>Group Discount Offer</strong></p>
+            <ul>
+              <li>Group of 5+ will get 5% discount.</li>
+              <li>Group of 10+ will get 10% discount.</li>
+            </ul>
+            <div className="register-line">
+              <p><strong>Duration:</strong> 1-6 months</p>
+              <button type="button" className="register-btn" onClick={jumpToRegistration}>Register Here</button>
+            </div>
+            <p><strong>YouTube:</strong> Link</p>
+            <p><strong>WhatsApp:</strong> Link</p>
+          </section>
+
+          <section className="card">
+            <h2>Program Details (Online / Offline)</h2>
+            <div className="mode-grid">
+              <div>
+                <h3>Online</h3>
+                <p>Date: To be announced</p>
+                <p>Time: Shared after registration</p>
+                <p>Platform: Google Meet</p>
+              </div>
+              <div>
+                <h3>Offline</h3>
+                <p>Date: To be announced</p>
+                <p>Time: Shared after registration</p>
+                <p>Venue: ITIPRO center</p>
+              </div>
+            </div>
+            <h3>Perks</h3>
+            <ul>
+              <li>QR verified offer letter and internship certificate.</li>
+              <li>Pre-placement support (4.5-6.5 LPA guidance).</li>
+            </ul>
+            <h3>Eligibility</h3>
+            <p>College students, freshers, and any graduates are welcome.</p>
+          </section>
+
+          <section className="flow-sheet">
+            <h2>How to succeed in Internship / Courses / Inplant Training?</h2>
+            <div className="success-steps">
+              {successSteps.map((text, i) => (
+                <article className="step-bubble" key={text}>
+                  <span className="step-number">{i + 1}</span>
+                  <p>{text}</p>
+                </article>
+              ))}
+            </div>
+
+            <h2 className="boxed-title">How to Contact ITIPRO for Attending Internship?</h2>
+            <div className="contact-map">
+              {contactFlow.map((item) => (
+                <div className="contact-row" key={item.option}>
+                  <div className={`speech-card ${!item.left ? 'ghost' : ''}`}>{item.left || ' '}</div>
+                  <div className="option-node">{item.option}</div>
+                  <div className={`speech-card ${!item.right ? 'ghost' : ''}`}>{item.right || ' '}</div>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          <section className="auth-section" ref={formRef}>
+            <div className="auth-tabs">
+              <button className={!isLoginView ? 'active' : ''} onClick={() => setIsLoginView(false)} type="button">Registration</button>
+              <button className={isLoginView ? 'active' : ''} onClick={() => setIsLoginView(true)} type="button">Login</button>
+            </div>
+
+            {message && (
+              <div className={`message ${messageType}`}>
+                {message}
+              </div>
+            )}
+
+            {!isLoginView ? (
+              <form className="form" onSubmit={handleRegistration}>
+                <h3>Student Registration</h3>
+                <div className="field-row">
+                  <label>Full Name<input type="text" name="fullName" placeholder="Enter full name" required /></label>
+                  <label>Email<input type="email" name="email" placeholder="Enter email" required /></label>
+                </div>
+                <div className="field-row">
+                  <label>Phone<input type="tel" name="phone" placeholder="Enter mobile number" required /></label>
+                  <label>College / University<input type="text" name="college" placeholder="Enter college name" required /></label>
+                </div>
+                <div className="field-row">
+                  <label>Qualification<select name="qualification" required><option value="">Select</option><option>B.Tech</option><option>BCA</option><option>MCA</option><option>Other Graduate</option></select></label>
+                  <label>Interested Domain<select name="interestedDomain" required><option value="">Select</option><option>EV Technology</option><option>Web Development</option><option>Data Science</option><option>Digital Marketing</option></select></label>
+                </div>
+                <div className="field-row">
+                  <label>Password<input type="password" name="password" placeholder="Create password" required /></label>
+                  <label>Confirm Password<input type="password" name="confirmPassword" placeholder="Confirm password" required /></label>
+                </div>
+                <button className="submit" type="submit" disabled={loading}>{loading ? 'Registering...' : 'Register Now'}</button>
+              </form>
+            ) : (
+              <form className="form" onSubmit={handleLogin}>
+                <h3>Student Login</h3>
+                <div className="field-row single">
+                  <label>Email or Phone<input type="text" name="emailOrPhone" placeholder="Enter email or mobile" required /></label>
+                </div>
+                <div className="field-row single">
+                  <label>Password<input type="password" name="password" placeholder="Enter password" required /></label>
+                </div>
+                <button className="submit" type="submit" disabled={loading}>{loading ? 'Logging in...' : 'Login'}</button>
+              </form>
+            )}
+          </section>
+        </main>
+      )}
     </div>
   );
 }
