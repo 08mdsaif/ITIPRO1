@@ -2,7 +2,7 @@ import React, { useRef, useState } from 'react';
 // import logo from './assets/itipro-logo.svg';
 import logo from './assets/logo.jpeg';
 
-const API_URL = 'https://itipro-1.vercel.app/';
+const API_URL = 'https://itipro-1.vercel.app/api';
 
 const successSteps = [
   'Learn technology and build your profile.',
