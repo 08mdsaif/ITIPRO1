@@ -13,7 +13,7 @@ app.use(cors({
   origin: [
     'http://localhost:5173',
     'http://localhost:3000',
-    'https://itipro-one.vercel.app'
+    'https://itipro.vercel.app'
   ],
   credentials: true
 }));
